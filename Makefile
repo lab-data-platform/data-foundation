@@ -8,7 +8,8 @@ AWS_REGION  ?= us-east-2
 export AWS_PROFILE
 
 # Avaliado só quando usado (=), para não chamar a AWS em todo `make`.
-ACCOUNT_ID   = $(shell aws sts get-caller-identity --query Account --output text)
+# O $(shell) não herda o `export` do Makefile, por isso o profile vai explícito.
+ACCOUNT_ID   = $(shell AWS_PROFILE=$(AWS_PROFILE) aws sts get-caller-identity --query Account --output text)
 STATE_BUCKET = $(PLATFORM)-tfstate-$(ACCOUNT_ID)
 
 .DEFAULT_GOAL := help
