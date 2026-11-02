@@ -15,4 +15,3 @@ variable "aws_profile" {
   type        = string
   default     = "lab-data"
 }
-

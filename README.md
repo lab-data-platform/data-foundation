@@ -46,6 +46,7 @@ data-foundation/
 make help            # lista os comandos
 make test            # testes unitários, sem AWS
 make whoami          # confirma a identidade (esperado: user/lab-admin)
+pre-commit install   # uma vez por clone: ativa os hooks (gitleaks, terraform fmt...)
 
 # Uma única vez: bucket do state
 make bootstrap-plan
@@ -64,6 +65,8 @@ Depois do `apply`, a AWS manda um e-mail para **confirmar a assinatura do tópic
 
 | Nível | Comando | O que cobre |
 |---|---|---|
+| Pré-commit | `pre-commit run --all-files` | Segredos (gitleaks, credenciais AWS, chaves privadas), YAML, formatação do Terraform e commit direto na `main`; roda sozinho a cada `git commit` |
+| CI | GitHub Actions ([ci.yml](.github/workflows/ci.yml)) | `terraform fmt -check`, `make validate` e `make test` em todo PR e push na `main`; obrigatório para o merge |
 | Unitário | `make test` | Nomes, tags, budget, assinaturas, contrato SSM e validação das variáveis, com provider simulado |
 | Real | `make plan` | Plano contra a conta `dev` |
 
