@@ -13,6 +13,15 @@ O que este repositório cria na conta. **Região:** `us-east-2` (Ohio), exceto o
 | **Amazon SNS** | Tópico `lab-data-dev-alerts` + assinatura de e-mail | Canal de alertas **técnicos** da plataforma: as próximas camadas publicam falhas nele | `us-east-2` | grátis no volume do lab | `infra/alerts.tf` | [SNS → Topics](https://us-east-2.console.aws.amazon.com/sns/v3/home?region=us-east-2#/topics) |
 | **AWS Systems Manager** (Parameter Store) | 4 parâmetros em `/lab-data/dev/foundation/` | Contrato lido pelos outros repositórios ([detalhe abaixo](#contrato-publicado)) | `us-east-2` | grátis (parâmetros *Standard*) | `infra/contract.tf` | [Parameter Store](https://us-east-2.console.aws.amazon.com/systems-manager/parameters?region=us-east-2) |
 
+**Previsto para o próximo deploy geral (etapa 1b):**
+
+| Serviço AWS | Recurso | Para que serve | Região | Custo | Código | Onde ver no console |
+|---|---|---|---|---|---|---|
+| **Amazon EventBridge** | Barramento `lab-data-dev-assets` + archive (90 dias) | Eventos `AssetUpdated`: cada asset pronto avisa quem depende dele; o archive permite auditoria e replay ([eventos](https://github.com/lab-data-platform/data-platform/blob/main/docs/eventos.md)) | `us-east-2` | US$ 1 por milhão de eventos | `infra/events.tf` | [EventBridge → Event buses](https://us-east-2.console.aws.amazon.com/events/home?region=us-east-2#/eventbuses) |
+| **AWS CloudTrail** | Trilha `lab-data-dev-audit` | Auditoria da conta: quem fez o quê, quando e de onde, com validação de integridade dos logs | `us-east-2` (multirregião) | grátis (1ª trilha de gerenciamento) | `infra/audit.tf` | [CloudTrail → Trails](https://us-east-2.console.aws.amazon.com/cloudtrail/home?region=us-east-2#/trails) |
+| **Amazon S3** | Bucket `lab-data-dev-audit-<account_id>` | Logs do CloudTrail por 365 dias; versionado e sem `force_destroy` | `us-east-2` | centavos | `infra/audit.tf` | [S3 → Buckets](https://us-east-2.console.aws.amazon.com/s3/buckets?region=us-east-2) |
+| **AWS Systems Manager** | +2 parâmetros: `assets_event_bus_name` e `assets_event_bus_arn` | Contrato do barramento para produtores e consumidores | `us-east-2` | grátis | `infra/contract.tf` | Parameter Store |
+
 **Previsto (camada 6):** rede e segurança base (VPC, security groups, roles IAM).
 
 **Fora do Terraform:** o usuário IAM `lab-admin` foi criado à mão no console ([setup](../data-platform/docs/setup/ambiente-local.md)).
@@ -67,7 +76,7 @@ Depois do `apply`, a AWS manda um e-mail para **confirmar a assinatura do tópic
 |---|---|---|
 | Pré-commit | `pre-commit run --all-files` | Segredos (gitleaks, credenciais AWS, chaves privadas), YAML, formatação do Terraform e commit direto na `main`; roda sozinho a cada `git commit` |
 | CI | GitHub Actions ([ci.yml](.github/workflows/ci.yml)) | Dois jobs em paralelo, em todo PR e push na `main`: **Terraform** (`fmt -check`, `make validate`, `make test`) e **pre-commit** (os mesmos hooks, em todos os arquivos); os dois são obrigatórios para o merge |
-| Unitário | `make test` | Nomes, tags, budget, assinaturas, contrato SSM e validação das variáveis, com provider simulado |
+| Unitário | `make test` | Nomes, tags, budget, assinaturas, barramento de assets, trilha de auditoria, contrato SSM e validação das variáveis, com provider simulado (11 casos) |
 | Real | `make plan` | Plano contra a conta `dev` |
 
 Este repositório não tem emulador local: os serviços dele (Budgets e as tags do S3 via S3 Control) não são emulados de forma confiável pelo moto. Ver [ADR-0012](../data-platform/docs/decisoes/0012-testes-locais.md).
@@ -80,5 +89,7 @@ Este repositório não tem emulador local: os serviços dele (Budgets e as tags 
 | `/lab-data/<env>/foundation/account_id` | ID da conta |
 | `/lab-data/<env>/foundation/region` | `us-east-2` |
 | `/lab-data/<env>/foundation/alerts_topic_arn` | ARN do tópico SNS de alertas |
+| `/lab-data/<env>/foundation/assets_event_bus_name` | Nome do barramento de eventos dos assets (etapa 1b) |
+| `/lab-data/<env>/foundation/assets_event_bus_arn` | ARN do barramento de eventos dos assets (etapa 1b) |
 
 Mudar um nome aqui quebra quem consome: atualize também o [catálogo de contratos](../data-platform/docs/contratos.md).
