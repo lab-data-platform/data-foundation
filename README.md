@@ -11,16 +11,10 @@ O que este repositório cria na conta. **Região:** `us-east-2` (Ohio), exceto o
 | **Amazon S3** | Bucket `lab-data-tfstate-<account_id>` | Guarda o state do Terraform de **todos** os repositórios. Versionamento, criptografia, bloqueio público, lifecycle e TLS ficam nas abas *Properties* e *Permissions* do bucket | `us-east-2` | centavos | `bootstrap/main.tf` | [S3 → Buckets](https://us-east-2.console.aws.amazon.com/s3/buckets?region=us-east-2) |
 | **AWS Budgets** | Budget `lab-data-dev-mensal` | Alerta de **custo** por e-mail: 50%, 80% e 100% de US$ 10, mais previsão do mês | global | grátis (2 primeiros budgets) | `infra/budget.tf` | [Billing → Budgets](https://us-east-1.console.aws.amazon.com/billing/home#/budgets) |
 | **Amazon SNS** | Tópico `lab-data-dev-alerts` + assinatura de e-mail | Canal de alertas **técnicos** da plataforma: as próximas camadas publicam falhas nele | `us-east-2` | grátis no volume do lab | `infra/alerts.tf` | [SNS → Topics](https://us-east-2.console.aws.amazon.com/sns/v3/home?region=us-east-2#/topics) |
-| **AWS Systems Manager** (Parameter Store) | 4 parâmetros em `/lab-data/dev/foundation/` | Contrato lido pelos outros repositórios ([detalhe abaixo](#contrato-publicado)) | `us-east-2` | grátis (parâmetros *Standard*) | `infra/contract.tf` | [Parameter Store](https://us-east-2.console.aws.amazon.com/systems-manager/parameters?region=us-east-2) |
-
-**Previsto para o próximo deploy geral (etapa 1b):**
-
-| Serviço AWS | Recurso | Para que serve | Região | Custo | Código | Onde ver no console |
-|---|---|---|---|---|---|---|
+| **AWS Systems Manager** (Parameter Store) | 6 parâmetros em `/lab-data/dev/foundation/` | Contrato lido pelos outros repositórios ([detalhe abaixo](#contrato-publicado)) | `us-east-2` | grátis (parâmetros *Standard*) | `infra/contract.tf` | [Parameter Store](https://us-east-2.console.aws.amazon.com/systems-manager/parameters?region=us-east-2) |
 | **Amazon EventBridge** | Barramento `lab-data-dev-assets` + archive (90 dias) | Eventos `AssetUpdated`: cada asset pronto avisa quem depende dele; o archive permite auditoria e replay ([eventos](https://github.com/lab-data-platform/data-platform/blob/main/docs/eventos.md)) | `us-east-2` | US$ 1 por milhão de eventos | `infra/events.tf` | [EventBridge → Event buses](https://us-east-2.console.aws.amazon.com/events/home?region=us-east-2#/eventbuses) |
 | **AWS CloudTrail** | Trilha `lab-data-dev-audit` | Auditoria da conta: quem fez o quê, quando e de onde, com validação de integridade dos logs | `us-east-2` (multirregião) | grátis (1ª trilha de gerenciamento) | `infra/audit.tf` | [CloudTrail → Trails](https://us-east-2.console.aws.amazon.com/cloudtrail/home?region=us-east-2#/trails) |
 | **Amazon S3** | Bucket `lab-data-dev-audit-<account_id>` | Logs do CloudTrail por 365 dias; versionado e sem `force_destroy` | `us-east-2` | centavos | `infra/audit.tf` | [S3 → Buckets](https://us-east-2.console.aws.amazon.com/s3/buckets?region=us-east-2) |
-| **AWS Systems Manager** | +2 parâmetros: `assets_event_bus_name` e `assets_event_bus_arn` | Contrato do barramento para produtores e consumidores | `us-east-2` | grátis | `infra/contract.tf` | Parameter Store |
 
 **Previsto (camada 6):** rede e segurança base (VPC, security groups, roles IAM).
 
