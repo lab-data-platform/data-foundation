@@ -9,6 +9,10 @@ locals {
     account_id       = local.account_id
     region           = var.aws_region
     alerts_topic_arn = aws_sns_topic.alerts.arn
+
+    # Barramento de eventos dos assets (ADR-0015).
+    assets_event_bus_name = aws_cloudwatch_event_bus.assets.name
+    assets_event_bus_arn  = aws_cloudwatch_event_bus.assets.arn
   }
 }
 
