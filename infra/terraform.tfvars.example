@@ -1,0 +1,6 @@
+# Copie para terraform.tfvars (ignorado pelo Git) e ajuste:
+#   cp -n terraform.tfvars.example terraform.tfvars   (-n: não sobrescreve um arquivo já editado)
+
+environment      = "dev"
+budget_limit_usd = 10
+alert_emails     = ["seu-email@exemplo.com"]
