@@ -48,3 +48,24 @@ variable "alert_emails" {
     error_message = "alert_emails ainda tem o e-mail de exemplo: coloque o seu e-mail em infra/terraform.tfvars."
   }
 }
+
+variable "assets_events_retention_days" {
+  description = "Dias que o archive do barramento de assets guarda os eventos (auditoria e replay)."
+  type        = number
+  default     = 90
+}
+
+variable "audit_retention_days" {
+  description = "Dias que os logs de auditoria do CloudTrail ficam no S3."
+  type        = number
+  default     = 365
+}
+
+variable "audit_multi_region" {
+  description = <<-EOT
+    Trilha de auditoria em todas as regiões. No plano gratuito só us-east-2 está liberada (ADR-0013);
+    se a SCP impedir a trilha multirregião no apply, use false.
+  EOT
+  type        = bool
+  default     = true
+}

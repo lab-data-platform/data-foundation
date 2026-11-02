@@ -14,6 +14,25 @@ mock_provider "aws" {
       arn = "arn:aws:sns:us-east-2:123456789012:lab-data-dev-alerts"
     }
   }
+
+  # O archive exige o ARN válido do barramento.
+  mock_resource "aws_cloudwatch_event_bus" {
+    defaults = {
+      arn = "arn:aws:events:us-east-2:123456789012:event-bus/lab-data-dev-assets"
+    }
+  }
+
+  mock_resource "aws_s3_bucket" {
+    defaults = {
+      arn = "arn:aws:s3:::lab-data-dev-audit-123456789012"
+    }
+  }
+
+  mock_data "aws_iam_policy_document" {
+    defaults = {
+      json = "{\"Version\":\"2012-10-17\",\"Statement\":[]}"
+    }
+  }
 }
 
 variables {
@@ -68,6 +87,8 @@ run "contrato_publica_os_parametros_esperados" {
     condition = toset([for p in aws_ssm_parameter.contract : p.name]) == toset([
       "/lab-data/dev/foundation/account_id",
       "/lab-data/dev/foundation/alerts_topic_arn",
+      "/lab-data/dev/foundation/assets_event_bus_arn",
+      "/lab-data/dev/foundation/assets_event_bus_name",
       "/lab-data/dev/foundation/name_prefix",
       "/lab-data/dev/foundation/region",
     ])
@@ -77,6 +98,44 @@ run "contrato_publica_os_parametros_esperados" {
   assert {
     condition     = aws_ssm_parameter.contract["name_prefix"].value == "lab-data-dev"
     error_message = "O parâmetro name_prefix deve conter o prefixo da plataforma."
+  }
+}
+
+run "barramento_de_assets_com_historico" {
+  command = plan
+
+  assert {
+    condition     = aws_cloudwatch_event_bus.assets.name == "lab-data-dev-assets"
+    error_message = "O barramento de assets deve se chamar <prefixo>-assets."
+  }
+
+  assert {
+    condition     = aws_cloudwatch_event_archive.assets.retention_days == 90
+    error_message = "O archive deve guardar os eventos por 90 dias por padrão."
+  }
+}
+
+run "trilha_de_auditoria_protegida" {
+  command = plan
+
+  assert {
+    condition     = aws_s3_bucket.audit.bucket == "lab-data-dev-audit-123456789012"
+    error_message = "O bucket de auditoria deve se chamar <prefixo>-audit-<account_id>."
+  }
+
+  assert {
+    condition     = !aws_s3_bucket.audit.force_destroy
+    error_message = "O bucket de auditoria não pode ser destruído com logs dentro."
+  }
+
+  assert {
+    condition     = aws_cloudtrail.audit.enable_log_file_validation && aws_cloudtrail.audit.include_global_service_events
+    error_message = "A trilha deve validar a integridade dos logs e incluir os serviços globais."
+  }
+
+  assert {
+    condition     = aws_s3_bucket_versioning.audit.versioning_configuration[0].status == "Enabled"
+    error_message = "O bucket de auditoria deve ser versionado."
   }
 }
 
